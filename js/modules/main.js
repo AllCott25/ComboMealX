@@ -248,11 +248,12 @@ const createGameSketch = () => {
         // Show recipe info
         p.textSize(24);
         p.textStyle(p.BOLD);
-        p.text("Today's Recipe: " + final_combination.name, p.width / 2, p.height / 2 - 40);
+        p.text("Today's Recipe: " + final_combination.name, p.width / 2, p.height / 2 - 40, p.width * 0.8);
         
         p.textSize(16);
         p.textStyle(p.NORMAL);
-        p.text(recipeDescription, p.width / 2, p.height / 2, p.width * 0.8, 100);
+        const descriptionHeight = 80;
+        p.text(recipeDescription, p.width / 2, p.height / 2, p.width * 0.8, descriptionHeight);
         
         // Draw start button
         startButton.draw();

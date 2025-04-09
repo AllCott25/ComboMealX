@@ -134,7 +134,10 @@ const createUIComponentsModule = (p) => {
   function drawByline(message, x, y, width, opacity, COLORS) {
     p.push();
     
-    p.fill(COLORS.text, opacity);
+    // Fix the opacity parameter - ensure it's a number
+    const alpha = typeof opacity === 'number' ? opacity : 255;
+    
+    p.fill(COLORS.text, alpha);
     p.textSize(16);
     p.textAlign(p.CENTER, p.CENTER);
     p.text(message, x, y, width);
