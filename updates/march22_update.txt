@@ -1,0 +1,35 @@
+# Floral Background Pattern Centering & Spacing (v0.0322.05-06)
+
+**Date:** March 22, 2025 (18:14 EDT)
+**Author:** APlasker
+
+## Changes Made
+- Improved floral background pattern centering (v0.0322.05):
+  - Redesigned pattern generation to ensure flowers are centered symmetrically
+  - Modified the left and right side background patterns to start from the center of available space
+  - Updated top and bottom floral borders to also be centered from the middle of the screen
+  - Added logic to ensure patterns extend just past screen edges for complete coverage
+  - Fixed issue where patterns had uneven spacing on different sides of the play area
+
+- Fixed floral pattern overlap with play area (v0.0322.06):
+  - Added safety margin to prevent flowers from overlapping with the play area
+  - Ensured at least one row of spacing between flowers and the play area
+  - Adjusted boundary conditions to respect the new safety margins
+  - Improved top/bottom flower positioning with minimum distance requirements
+
+## Technical Implementation
+- Updated the `drawFloralBorder` function to:
+  - Calculate center points for left and right side spaces
+  - Generate flowers working outward from the center in both directions
+  - Skip flowers that would be completely off-screen
+  - Add a safety margin equal to one flower spacing (40px)
+  - Properly adjust calculation boundaries to respect margins
+
+- Updated the `drawTopBottomFlowers` function to:
+  - Find the center point of the screen width
+  - Place flowers symmetrically outward in both directions
+  - Add proper spacing between flowers and play area
+  - Use max() function to ensure adequate spacing regardless of screen dimensions
+
+## Results
+The floral background pattern now appears perfectly centered on both sides of the play area with proper spacing. The pattern maintains a clean, non-overlapping distance from the play area, creating a more visually balanced and aesthetically pleasing design regardless of screen size. 
