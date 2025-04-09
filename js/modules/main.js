@@ -130,10 +130,11 @@ const createGameSketch = () => {
     
     // Preload assets
     p.preload = function() {
-      // Load fonts
-      titleFont = p.loadFont('assets/fonts/Poppins-Bold.ttf');
-      bodyFont = p.loadFont('assets/fonts/Poppins-Regular.ttf');
-      buttonFont = p.loadFont('assets/fonts/Poppins-Bold.ttf');
+      // Use web-safe fonts instead of trying to load custom fonts
+      console.log("Using web-safe fonts for better compatibility");
+      titleFont = 'Georgia';
+      bodyFont = 'Arial';
+      buttonFont = 'Verdana';
       
       // Mark as loading recipe
       isLoadingRecipe = true;
