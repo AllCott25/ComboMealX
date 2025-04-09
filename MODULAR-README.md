@@ -1,6 +1,6 @@
 # Combo Meal - Modular Structure
 
-Last Updated: March 26, 2025 by APlasker
+Last Updated: April 9, 2025 by APlasker
 
 ## Overview
 
@@ -8,8 +8,11 @@ This is the modular version of the Combo Meal game, which has been refactored fr
 
 ## Project Structure
 
-- `modular-index.html` - Entry point HTML file for the modular version
+- `index.html` - Entry point HTML file (previously named modular-index.html)
+- `index_old.html` - Old monolithic version (archived)
 - `js/index.js` - Main JavaScript entry point that loads the modules
+- `js/sketch.js` - Main modular sketch file (previously named modules-sketch.js)
+- `js/4-8-NORTHSTAR-sketch.js` - Archived monolithic version (previously named sketch.js)
 - `js/modules/` - Directory containing all game modules:
   - `main.js` - Core game logic and p5.js lifecycle methods
   - `animations.js` - Animation classes and functions

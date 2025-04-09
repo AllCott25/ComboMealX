@@ -1,7 +1,12 @@
 /**
  * main.js
  * Main game module for the Combo Meal game
- * Last Updated: March 26, 2025 (13:00 EDT) by APlasker
+ * Last Updated: April 9, 2025 (15:52 EDT) by APlasker
+ * 
+ * Note: File structure reorganized on April 9, 2025:
+ * - modular-index.html renamed to index.html
+ * - Old sketch.js renamed to 4-8-NORTHSTAR-sketch.js
+ * - modules-sketch.js renamed to sketch.js
  */
 
 import createAnimationsModule from './animations.js';
