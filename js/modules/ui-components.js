@@ -132,17 +132,49 @@ const createUIComponentsModule = (p) => {
   
   // Draw the byline text
   function drawByline(message, x, y, width, opacity, COLORS) {
-    p.push();
-    
-    // Fix the opacity parameter - ensure it's a number
-    const alpha = typeof opacity === 'number' ? opacity : 255;
-    
-    p.fill(COLORS.text, alpha);
-    p.textSize(16);
-    p.textAlign(p.CENTER, p.CENTER);
-    p.text(message, x, y, width);
-    
-    p.pop();
+    try {
+      p.push();
+      
+      // Create a proper color object with opacity
+      let textColor;
+      try {
+        // Ensure opacity is a number between 0-255
+        const alpha = typeof opacity === 'number' ? p.constrain(opacity, 0, 255) : 255;
+        
+        // Use p5's color function to create a proper color with alpha
+        if (COLORS && COLORS.text) {
+          textColor = p.color(COLORS.text);
+          textColor.setAlpha(alpha);
+        } else {
+          // Fallback to black if color object is invalid
+          console.warn('Invalid COLORS object in drawByline, using fallback');
+          textColor = p.color(0, 0, 0, alpha);
+        }
+        
+        p.fill(textColor);
+      } catch (colorErr) {
+        // If color creation fails, use a safe fallback
+        console.error('Error creating color in drawByline:', colorErr);
+        p.fill(0, 0, 0, 255); // Black as fallback
+      }
+      
+      p.textSize(16);
+      p.textAlign(p.CENTER, p.CENTER);
+      
+      // Safe text drawing
+      if (typeof message === 'string') {
+        p.text(message, x, y, width);
+      } else {
+        // Fallback for non-string messages
+        p.text('Game message', x, y, width);
+      }
+      
+      p.pop();
+    } catch (err) {
+      // Recover from any errors in the function
+      console.error('Error in drawByline:', err);
+      // Don't let the error propagate and crash the game
+    }
   }
   
   // Draw a tutorial equation

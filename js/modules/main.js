@@ -197,37 +197,120 @@ const createGameSketch = () => {
     
     // Draw function
     p.draw = function() {
-      p.background(COLORS.background);
-      
-      // Update flower rotation
-      flowerRotation += 0.002;
-      
-      // Draw floral elements
-      ui.drawTopBottomFlowers(flowerRotation, COLORS);
-      
-      // Main game state display logic
-      switch (gameState) {
-        case "start":
-          drawStartScreen();
-          break;
-        case "tutorial":
-          drawTutorialScreen();
-          break;
-        case "playing":
-          drawPlayingScreen();
-          break;
-        case "win":
-          drawWinScreen();
-          break;
+      try {
+        // Clear the background
+        p.background(COLORS.background);
+        
+        try {
+          // Update flower rotation
+          flowerRotation += 0.002;
+          
+          // Draw floral elements
+          try {
+            ui.drawTopBottomFlowers(flowerRotation, COLORS);
+          } catch (floralError) {
+            console.error("Error drawing floral elements:", floralError);
+            // Continue with the rest of the rendering
+          }
+          
+          // Main game state display logic with error handling for each state
+          try {
+            switch (gameState) {
+              case "start":
+                try {
+                  drawStartScreen();
+                } catch (startError) {
+                  console.error("Error in start screen:", startError);
+                  // Fallback for start screen error
+                  p.fill(0);
+                  p.textAlign(p.CENTER, p.CENTER);
+                  p.text("Loading game...", p.width/2, p.height/2);
+                }
+                break;
+              case "tutorial":
+                try {
+                  drawTutorialScreen();
+                } catch (tutorialError) {
+                  console.error("Error in tutorial screen:", tutorialError);
+                  // Fallback for tutorial screen
+                  p.fill(0);
+                  p.text("Tutorial unavailable", p.width/2, p.height/2);
+                }
+                break;
+              case "playing":
+                try {
+                  drawPlayingScreen();
+                } catch (playingError) {
+                  console.error("Error in playing screen:", playingError);
+                  // Fallback for playing screen
+                  p.fill(0);
+                  p.text("Game is running", p.width/2, p.height/2);
+                }
+                break;
+              case "win":
+                try {
+                  drawWinScreen();
+                } catch (winError) {
+                  console.error("Error in win screen:", winError);
+                  // Fallback for win screen
+                  p.fill(0);
+                  p.text("You won!", p.width/2, p.height/2);
+                }
+                break;
+              default:
+                // Unknown game state
+                console.warn("Unknown game state:", gameState);
+                p.fill(0);
+                p.text("Game loading...", p.width/2, p.height/2);
+            }
+          } catch (stateError) {
+            console.error("Critical error in game state handling:", stateError);
+            // Emergency fallback
+            p.fill(0);
+            p.textSize(24);
+            p.text("Game is experiencing issues", p.width/2, p.height/2);
+          }
+          
+          // Draw byline if not on win screen
+          if (gameState !== "win") {
+            try {
+              updateAndDrawByline();
+            } catch (bylineError) {
+              console.error("Error updating byline:", bylineError);
+              // We already have error handling in updateAndDrawByline
+            }
+          }
+          
+          // Update cursor
+          try {
+            updateCursor();
+          } catch (cursorError) {
+            console.error("Error updating cursor:", cursorError);
+            // Fallback to default cursor
+            p.cursor('default');
+          }
+        } catch (innerError) {
+          console.error("Critical error in draw function:", innerError);
+          // Display error message to user
+          p.background(245, 245, 245);
+          p.fill(200, 0, 0);
+          p.textSize(18);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.text("Game encountered an error. Please refresh.", p.width/2, p.height/2);
+        }
+      } catch (criticalError) {
+        // Last resort error handling - this should never happen
+        console.error("Fatal error in draw function:", criticalError);
+        try {
+          p.background(255);
+          p.fill(255, 0, 0);
+          p.textSize(16);
+          p.text("Fatal error. Please refresh the page.", p.width/2, p.height/2);
+        } catch (e) {
+          // If we can't even render text, there's not much we can do
+          console.error("Cannot recover from error:", e);
+        }
       }
-      
-      // Draw byline if not on win screen
-      if (gameState !== "win") {
-        updateAndDrawByline();
-      }
-      
-      // Update cursor
-      updateCursor();
     };
     
     // Draw start screen
@@ -349,63 +432,83 @@ const createGameSketch = () => {
     
     // Update and draw byline
     function updateAndDrawByline() {
-      // Check for inactivity to show hint prompt
-      if (gameState === "playing" && lastAction > 0) {
-        const framesSinceLastAction = p.frameCount - lastAction;
-        
-        if (framesSinceLastAction > inactivityThreshold && 
-            bylineTransitionState === "stable" && 
-            currentByline === "Drag & drop to combine ingredients!" &&
-            !isTransitioning) {
-          updateBylineWithTransition("Try using a HINT if you're stuck!");
-        }
-      }
-      
-      // Handle byline timer
-      if (bylineTimer > 0) {
-        bylineTimer--;
-        
-        if (bylineTimer === 0 && !isTransitioning) {
-          updateBylineWithTransition("Drag & drop to combine ingredients!");
-        }
-      }
-      
-      // Handle byline transitions
-      if (bylineTransitionState === "fading-out") {
-        bylineOpacity -= 255 / bylineFadeFrames;
-        
-        if (bylineOpacity <= 0) {
-          bylineOpacity = 0;
-          bylineTransitionState = "changing";
-          currentByline = nextByline;
-        }
-      } else if (bylineTransitionState === "changing") {
-        bylineTransitionState = "fading-in";
-      } else if (bylineTransitionState === "fading-in") {
-        bylineOpacity += 255 / bylineFadeFrames;
-        
-        if (bylineOpacity >= 255) {
-          bylineOpacity = 255;
-          bylineTransitionState = "stable";
-          isTransitioning = false;
+      try {
+        // Check for inactivity to show hint prompt
+        if (gameState === "playing" && lastAction > 0) {
+          const framesSinceLastAction = p.frameCount - lastAction;
           
-          // Set timer if this is a temporary message
-          if (transitionDuration > 0) {
-            bylineTimer = transitionDuration;
-            transitionDuration = 0;
+          if (framesSinceLastAction > inactivityThreshold && 
+              bylineTransitionState === "stable" && 
+              currentByline === "Drag & drop to combine ingredients!" &&
+              !isTransitioning) {
+            updateBylineWithTransition("Try using a HINT if you're stuck!");
           }
         }
+        
+        // Handle byline timer
+        if (bylineTimer > 0) {
+          bylineTimer--;
+          
+          if (bylineTimer === 0 && !isTransitioning) {
+            updateBylineWithTransition("Drag & drop to combine ingredients!");
+          }
+        }
+        
+        // Handle byline transitions
+        if (bylineTransitionState === "fading-out") {
+          bylineOpacity -= 255 / bylineFadeFrames;
+          
+          if (bylineOpacity <= 0) {
+            bylineOpacity = 0;
+            bylineTransitionState = "changing";
+            currentByline = nextByline;
+          }
+        } else if (bylineTransitionState === "changing") {
+          bylineTransitionState = "fading-in";
+        } else if (bylineTransitionState === "fading-in") {
+          bylineOpacity += 255 / bylineFadeFrames;
+          
+          if (bylineOpacity >= 255) {
+            bylineOpacity = 255;
+            bylineTransitionState = "stable";
+            isTransitioning = false;
+            
+            // Set timer if this is a temporary message
+            if (transitionDuration > 0) {
+              bylineTimer = transitionDuration;
+              transitionDuration = 0;
+            }
+          }
+        }
+        
+        // Draw byline - ensure opacity is a number
+        const safeOpacity = typeof bylineOpacity === 'number' ? bylineOpacity : 255;
+        
+        ui.drawByline(
+          currentByline, 
+          p.width / 2, 
+          p.height - 40, 
+          p.width * 0.9, 
+          safeOpacity, 
+          COLORS
+        );
+      } catch (err) {
+        console.error('Error in updateAndDrawByline:', err);
+        // Provide a fallback to prevent game from freezing
+        try {
+          ui.drawByline(
+            "Game in progress...", 
+            p.width / 2, 
+            p.height - 40, 
+            p.width * 0.9, 
+            255, 
+            { text: '#333333' } // Fallback color object
+          );
+        } catch (fallbackErr) {
+          console.error('Even fallback byline failed:', fallbackErr);
+          // At this point, we can't do much more
+        }
       }
-      
-      // Draw byline
-      ui.drawByline(
-        currentByline, 
-        p.width / 2, 
-        p.height - 40, 
-        p.width * 0.9, 
-        bylineOpacity, 
-        COLORS
-      );
     }
     
     // Update byline with transition effect
@@ -476,6 +579,8 @@ const createGameSketch = () => {
       isLoadingRecipe = true;
       
       try {
+        console.log('Starting recipe data load');
+        
         // In the real game, this would fetch from Supabase
         // For now, we'll just simulate a delay
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -493,11 +598,33 @@ const createGameSketch = () => {
         recipeAuthor = recipe_data.author;
         recipeUrl = recipe_data.url;
         
+        console.log('Recipe data loaded successfully:', recipe_data.name);
         isLoadingRecipe = false;
       } catch (error) {
         console.error("Error loading recipe data:", error);
+        
+        // Provide fallback data to ensure game can continue
+        recipe_data = {
+          name: "Chicken Parm",
+          description: "A delicious Italian-American classic.",
+          author: "Test Kitchen",
+          url: "#"
+        };
+        
+        recipeDescription = recipe_data.description;
+        recipeAuthor = recipe_data.author;
+        recipeUrl = recipe_data.url;
+        
         loadingError = true;
         isLoadingRecipe = false;
+        
+        // Force transition to game state after error recovery
+        setTimeout(() => {
+          if (gameState === "start") {
+            console.log('Auto-transitioning to game after load error recovery');
+            gameState = "playing";
+          }
+        }, 2000);
       }
     }
     
