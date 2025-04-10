@@ -315,31 +315,60 @@ const createGameSketch = () => {
     
     // Draw start screen
     function drawStartScreen() {
-      // Draw game title
-      ui.drawTitle(p.width / 2, p.height / 3, 60, COLORS);
-      
-      // Draw loading message or error
-      p.fill(COLORS.text);
-      p.textAlign(p.CENTER, p.CENTER);
-      p.textSize(18);
-      
-      if (isLoadingRecipe) {
-        p.text("Loading recipe...", p.width / 2, p.height / 2);
-      } else if (loadingError) {
-        p.text("Error loading recipe. Please try again later.", p.width / 2, p.height / 2);
-      } else {
-        // Show recipe info
+      try {
+        // Draw game title
+        ui.drawTitle(p.width / 2, p.height / 3, 60, COLORS);
+        
+        // Draw loading message or error
+        p.fill(COLORS.text);
+        p.textAlign(p.CENTER, p.CENTER);
+        p.textSize(18);
+        
+        if (isLoadingRecipe) {
+          p.text("Loading recipe...", p.width / 2, p.height / 2);
+        } else if (loadingError) {
+          p.text("Error loading recipe. Please try again later.", p.width / 2, p.height / 2);
+        } else {
+          // Show recipe info
+          p.textSize(24);
+          p.textStyle(p.BOLD);
+          
+          // Safely display the recipe name with width parameter but no height (fixes totalHeight issue)
+          const recipeName = final_combination && final_combination.name ? final_combination.name : "Today's Recipe";
+          p.text("Today's Recipe: " + recipeName, p.width / 2, p.height / 2 - 40, p.width * 0.8);
+          
+          p.textSize(16);
+          p.textStyle(p.NORMAL);
+          
+          // Define description height locally to ensure it exists
+          const descriptionHeight = 80;
+          
+          // Safely display the recipe description
+          const safeDescription = typeof recipeDescription === 'string' ? recipeDescription : "A delicious recipe to create today!";
+          p.text(safeDescription, p.width / 2, p.height / 2, p.width * 0.8, descriptionHeight);
+          
+          // Draw start button if it exists
+          if (startButton && typeof startButton.draw === 'function') {
+            startButton.draw();
+          } else {
+            // Fallback if button doesn't exist
+            p.fill(COLORS.primary);
+            p.rect(p.width / 2 - 90, p.height / 2 + 100, 180, 50, 10);
+            p.fill(255);
+            p.text("START GAME", p.width / 2, p.height / 2 + 125);
+          }
+        }
+      } catch (error) {
+        console.error("Error in drawStartScreen:", error);
+        
+        // Fallback rendering if there's an error
+        p.background(COLORS.background);
+        p.fill(COLORS.text);
+        p.textAlign(p.CENTER, p.CENTER);
         p.textSize(24);
-        p.textStyle(p.BOLD);
-        p.text("Today's Recipe: " + final_combination.name, p.width / 2, p.height / 2 - 40, p.width * 0.8);
-        
-        p.textSize(16);
-        p.textStyle(p.NORMAL);
-        const descriptionHeight = 80;
-        p.text(recipeDescription, p.width / 2, p.height / 2, p.width * 0.8, descriptionHeight);
-        
-        // Draw start button
-        startButton.draw();
+        p.text("Combo Meal", p.width / 2, p.height / 3);
+        p.textSize(18);
+        p.text("Loading game...", p.width / 2, p.height / 2);
       }
     }
     
