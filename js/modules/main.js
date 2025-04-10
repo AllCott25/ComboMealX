@@ -325,50 +325,107 @@ const createGameSketch = () => {
         p.textSize(18);
         
         if (isLoadingRecipe) {
+          // Use direct parameters without additional height parameters
           p.text("Loading recipe...", p.width / 2, p.height / 2);
         } else if (loadingError) {
+          // Use direct parameters without additional height parameters
           p.text("Error loading recipe. Please try again later.", p.width / 2, p.height / 2);
         } else {
           // Show recipe info
           p.textSize(24);
           p.textStyle(p.BOLD);
           
-          // Safely display the recipe name with width parameter but no height (fixes totalHeight issue)
-          const recipeName = final_combination && final_combination.name ? final_combination.name : "Today's Recipe";
-          p.text("Today's Recipe: " + recipeName, p.width / 2, p.height / 2 - 40, p.width * 0.8);
+          try {
+            // Safely display the recipe name with fixed parameters to avoid totalHeight issue
+            const recipeName = final_combination && final_combination.name ? final_combination.name : "Today's Recipe";
+            // Use explicit width parameter but avoid using height parameter
+            const recipeTitle = "Today's Recipe: " + recipeName;
+            const recipeTitleWidth = p.textWidth(recipeTitle);
+            // Use simple text rendering approach that avoids potential internal p5.js issues
+            p.text(recipeTitle, p.width / 2, p.height / 2 - 40);
+          } catch (textError) {
+            console.error("Error displaying recipe title:", textError);
+            // Fallback for recipe title
+            p.text("Today's Recipe", p.width / 2, p.height / 2 - 40);
+          }
           
-          p.textSize(16);
-          p.textStyle(p.NORMAL);
+          try {
+            p.textSize(16);
+            p.textStyle(p.NORMAL);
+            
+            // Use simpler approach to text rendering for description
+            // Avoid using the 4-parameter version of text() that might reference totalHeight internally
+            const safeDescription = typeof recipeDescription === 'string' ? recipeDescription : "A delicious recipe to create today!";
+            
+            // Split description into multiple lines manually if needed
+            const maxWidth = p.width * 0.8;
+            const words = safeDescription.split(' ');
+            let line = '';
+            let y = p.height / 2;
+            
+            for (const word of words) {
+              const testLine = line + word + ' ';
+              const testWidth = p.textWidth(testLine);
+              
+              if (testWidth > maxWidth && line !== '') {
+                p.text(line, p.width / 2, y);
+                line = word + ' ';
+                y += 20; // Line height
+              } else {
+                line = testLine;
+              }
+            }
+            
+            // Draw final line
+            if (line !== '') {
+              p.text(line, p.width / 2, y);
+            }
+          } catch (descError) {
+            console.error("Error displaying recipe description:", descError);
+            // Fallback for description
+            p.text("A delicious recipe", p.width / 2, p.height / 2);
+          }
           
-          // Define description height locally to ensure it exists
-          const descriptionHeight = 80;
-          
-          // Safely display the recipe description
-          const safeDescription = typeof recipeDescription === 'string' ? recipeDescription : "A delicious recipe to create today!";
-          p.text(safeDescription, p.width / 2, p.height / 2, p.width * 0.8, descriptionHeight);
-          
-          // Draw start button if it exists
-          if (startButton && typeof startButton.draw === 'function') {
-            startButton.draw();
-          } else {
-            // Fallback if button doesn't exist
+          try {
+            // Draw start button if it exists
+            if (startButton && typeof startButton.draw === 'function') {
+              startButton.draw();
+            } else {
+              // Fallback if button doesn't exist
+              p.fill(COLORS.primary);
+              p.rect(p.width / 2 - 90, p.height / 2 + 100, 180, 50, 10);
+              p.fill(255);
+              p.text("START GAME", p.width / 2, p.height / 2 + 125);
+            }
+          } catch (buttonError) {
+            console.error("Error drawing start button:", buttonError);
+            // Fallback button
             p.fill(COLORS.primary);
             p.rect(p.width / 2 - 90, p.height / 2 + 100, 180, 50, 10);
             p.fill(255);
-            p.text("START GAME", p.width / 2, p.height / 2 + 125);
+            p.text("START", p.width / 2, p.height / 2 + 125);
           }
         }
       } catch (error) {
         console.error("Error in drawStartScreen:", error);
         
         // Fallback rendering if there's an error
-        p.background(COLORS.background);
-        p.fill(COLORS.text);
-        p.textAlign(p.CENTER, p.CENTER);
-        p.textSize(24);
-        p.text("Combo Meal", p.width / 2, p.height / 3);
-        p.textSize(18);
-        p.text("Loading game...", p.width / 2, p.height / 2);
+        try {
+          p.background(COLORS.background);
+          p.fill(COLORS.text);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.textSize(24);
+          p.text("Combo Meal", p.width / 2, p.height / 3);
+          p.textSize(18);
+          p.text("Loading game...", p.width / 2, p.height / 2);
+        } catch (fallbackError) {
+          console.error("Critical error in fallback rendering:", fallbackError);
+          // Last resort rendering with minimal dependencies
+          p.background(245, 245, 245);
+          p.fill(0);
+          p.textSize(16);
+          p.text("Loading...", p.width / 2, p.height / 2);
+        }
       }
     }
     

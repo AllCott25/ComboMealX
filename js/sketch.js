@@ -1,13 +1,14 @@
 /*
- * Culinary Logic Puzzle v0.0409.04
+ * Culinary Logic Puzzle v0.0409.05
  * Created by Ben Alpert
- * Last Updated: April 9, 2025 (20:07 EDT) by APlasker
+ * Last Updated: April 9, 2025 (20:23 EDT) by APlasker
  * Modularized: March 26, 2025 (13:00 EDT) by APlasker
  * 
  * File renamed from modules-sketch.js to sketch.js on April 9, 2025
  * Font loading updated to use web-safe fonts on April 9, 2025
  * Bug fixes for color handling and text rendering on April 9, 2025
  * Comprehensive error handling added on April 9, 2025
+ * Fixed totalHeight reference error in drawStartScreen on April 9, 2025
  *
  * A daily culinary logic puzzle game where players combine ingredients
  * according to recipe logic to create a final dish.
