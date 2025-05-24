@@ -336,6 +336,9 @@ function processRecipeData(recipe, combinations, ingredients, easterEggs = []) {
   const result = {
     recipeName: recipe.name,
     recipeUrl: recipe.recipe_url || "https://www.example.com/recipe",
+    imgUrl: recipe.img_url || null,
+    day_number: recipe.day_number || "###",
+    date: recipe.date || "###",
     intermediateCombinations,
     finalCombination,
     baseIngredients: [...new Set(baseIngredients)],
@@ -424,4 +427,223 @@ async function fetchRandomRecipe() {
     console.error("Error in fetchRandomRecipe:", error);
     return null;
   }
-} 
+}
+
+// =============================================================================
+// GAME ANALYTICS FUNCTIONS - APlasker
+// =============================================================================
+
+// Global variables for session tracking
+let currentSessionId = null;
+let gameStartTime = null;
+let totalMistakes = 0;
+let totalHintsUsed = 0;
+let totalEasterEggsFound = 0;
+
+// Generate a simple user identifier (hash of IP-like data)
+function generateUserIdentifier() {
+  // Create a simple hash based on screen resolution, timezone, and user agent
+  const screenInfo = `${screen.width}x${screen.height}`;
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const userAgent = navigator.userAgent.substring(0, 50); // First 50 chars
+  const combined = `${screenInfo}-${timezone}-${userAgent}`;
+  
+  // Simple hash function
+  let hash = 0;
+  for (let i = 0; i < combined.length; i++) {
+    const char = combined.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash).toString(36);
+}
+
+// Start a new game session
+async function startGameSession(recipeId) {
+  try {
+    console.log("Starting game session analytics for recipe ID:", recipeId);
+    
+    const sessionData = {
+      rec_id: recipeId,
+      user_id: generateUserIdentifier(),
+      started_at: new Date().toISOString(),
+      mistakes_total: 0,
+      hints_used: 0,
+      easter_eggs_found: 0
+    };
+    
+    const { data, error } = await supabase
+      .from('game_sessions')
+      .insert([sessionData])
+      .select()
+      .single();
+      
+    if (error) {
+      console.error("Error starting game session:", error);
+      return null;
+    }
+    
+    if (data) {
+      currentSessionId = data.session_id;
+      gameStartTime = new Date();
+      totalMistakes = 0;
+      totalHintsUsed = 0;
+      totalEasterEggsFound = 0;
+      console.log("Game session started with ID:", currentSessionId);
+      return data.session_id;
+    }
+  } catch (error) {
+    console.error("Error in startGameSession:", error);
+    return null;
+  }
+}
+
+// Track a mistake/failed combination attempt
+async function trackMistake() {
+  if (!currentSessionId) return;
+  
+  try {
+    totalMistakes++;
+    console.log("Tracking mistake, total mistakes:", totalMistakes);
+    
+    const { error } = await supabase
+      .from('game_sessions')
+      .update({ mistakes_total: totalMistakes })
+      .eq('session_id', currentSessionId);
+      
+    if (error) {
+      console.error("Error tracking mistake:", error);
+    }
+  } catch (error) {
+    console.error("Error in trackMistake:", error);
+  }
+}
+
+// Track hint usage
+async function trackHintUsed() {
+  if (!currentSessionId) return;
+  
+  try {
+    totalHintsUsed++;
+    console.log("Tracking hint used, total hints:", totalHintsUsed);
+    
+    const { error } = await supabase
+      .from('game_sessions')
+      .update({ hints_used: totalHintsUsed })
+      .eq('session_id', currentSessionId);
+      
+    if (error) {
+      console.error("Error tracking hint:", error);
+    }
+  } catch (error) {
+    console.error("Error in trackHintUsed:", error);
+  }
+}
+
+// Track Easter egg discovery
+async function trackEasterEggFound() {
+  if (!currentSessionId) return;
+  
+  try {
+    totalEasterEggsFound++;
+    console.log("Tracking Easter egg found, total found:", totalEasterEggsFound);
+    
+    const { error } = await supabase
+      .from('game_sessions')
+      .update({ easter_eggs_found: totalEasterEggsFound })
+      .eq('session_id', currentSessionId);
+      
+    if (error) {
+      console.error("Error tracking Easter egg:", error);
+    }
+  } catch (error) {
+    console.error("Error in trackEasterEggFound:", error);
+  }
+}
+
+// Complete the game session
+async function completeGameSession(winCondition) {
+  if (!currentSessionId) return;
+  
+  try {
+    const endTime = new Date();
+    const totalTimeSeconds = gameStartTime ? Math.floor((endTime - gameStartTime) / 1000) : 0;
+    
+    console.log(`Completing game session with condition: ${winCondition}, time: ${totalTimeSeconds}s`);
+    
+    const updateData = {
+      completed_at: endTime.toISOString(),
+      total_time_seconds: totalTimeSeconds,
+      mistakes_total: totalMistakes,
+      hints_used: totalHintsUsed,
+      easter_eggs_found: totalEasterEggsFound,
+      win_condition: winCondition
+    };
+    
+    const { error } = await supabase
+      .from('game_sessions')
+      .update(updateData)
+      .eq('session_id', currentSessionId);
+      
+    if (error) {
+      console.error("Error completing game session:", error);
+    } else {
+      console.log("Game session completed successfully");
+    }
+    
+    // Reset session tracking
+    currentSessionId = null;
+    gameStartTime = null;
+    totalMistakes = 0;
+    totalHintsUsed = 0;
+    totalEasterEggsFound = 0;
+    
+  } catch (error) {
+    console.error("Error in completeGameSession:", error);
+  }
+}
+
+// Get current session stats (for debugging or display)
+function getCurrentSessionStats() {
+  return {
+    sessionId: currentSessionId,
+    startTime: gameStartTime,
+    mistakes: totalMistakes,
+    hints: totalHintsUsed,
+    easterEggs: totalEasterEggsFound,
+    timeElapsed: gameStartTime ? Math.floor((new Date() - gameStartTime) / 1000) : 0
+  };
+}
+
+// APlasker - Track page unload to detect game abandonment
+window.addEventListener('beforeunload', function() {
+  // Only track abandonment if there's an active session and game hasn't been won
+  if (currentSessionId && typeof gameWon !== 'undefined' && !gameWon) {
+    console.log("Tracking game abandonment on page unload");
+    // Use sendBeacon for reliable delivery during page unload
+    const abandonmentData = {
+      completed_at: new Date().toISOString(),
+      total_time_seconds: gameStartTime ? Math.floor((new Date() - gameStartTime) / 1000) : 0,
+      mistakes_total: totalMistakes,
+      hints_used: totalHintsUsed,
+      easter_eggs_found: totalEasterEggsFound,
+      win_condition: 'abandoned'
+    };
+    
+    // Try to send abandonment data using fetch with keepalive
+    try {
+      fetch(`${SUPABASE_URL}/rest/v1/game_sessions?session_id=eq.${currentSessionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        },
+        body: JSON.stringify(abandonmentData),
+        keepalive: true // This helps ensure the request completes even if the page is closing
+      });
+    } catch (error) {
+      console.error("Error tracking abandonment:", error);
+    }
+  }
+}); 
